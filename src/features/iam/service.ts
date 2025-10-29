@@ -48,7 +48,7 @@ export function createService(db: Db) {
       if (!validateSessionClaims(sessionClaims))
         return { id: "", role: "guest" };
 
-      const { name, email, domain } = claim(sessionClaims);
+      const { name, email } = claim(sessionClaims);
 
       if (!email) return { id: "", role: "guest" };
 
