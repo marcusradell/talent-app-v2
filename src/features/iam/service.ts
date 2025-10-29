@@ -45,12 +45,12 @@ export function createService(db: Db) {
     },
 
     async createUserIfValid(userId: string, sessionClaims: SessionClaims) {
-      const SALT_DOMAIN = "appliedtechnology.se";
       if (!validateSessionClaims(sessionClaims))
         return { id: "", role: "guest" };
 
       const { name, email, domain } = claim(sessionClaims);
-      if (domain !== SALT_DOMAIN || !email) return { id: "", role: "guest" };
+
+      if (!email) return { id: "", role: "guest" };
 
       return await repository.addIdentity({ name, email, clerkId: userId });
     },
