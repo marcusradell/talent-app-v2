@@ -1,6 +1,7 @@
 import { iamService } from "./instance";
 import { faker } from "@faker-js/faker";
 import { IdentityInsert, IdentitySelect } from "./schema";
+import { developerProfilesService } from "../developer-profiles";
 
 export async function seedIdentities() {
   console.log("Starting to seed identities...");

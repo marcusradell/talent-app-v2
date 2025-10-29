@@ -4,51 +4,92 @@ import { AddDeveloperProfile, developerProfileDetails } from "./types";
 import { skills } from "./seed-data";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
-import { developerProfilesSeedingService } from "./instance";
+import { createDeveloperProfilesService } from "./service";
+import { db } from "@/db";
+import { createAssignmentsService } from "../assignments";
 
 export async function seedDeveloperProfiles(identities: IdentitySelect[]) {
+  const assignmentsService = createAssignmentsService(db);
+  const developerProfilesSeedingService = createDeveloperProfilesService(
+    db,
+    (): Promise<{ id: string; role: string } | null> => {
+      return Promise.resolve({ id: "", role: "" });
+    },
+    assignmentsService.getScoredAssignmentsByCohortIdAndIdentityId,
+    assignmentsService.getAssignmentBySlug,
+    assignmentsService.getAverageScoresByIdentityId
+  );
+
   console.log("Seeding developer profiles...");
   const developerIds: string[] = [];
-  
+
   try {
     for (const identity of identities) {
       const randomNumber = Math.random() * 10;
-      const status = randomNumber < 5 ? "highlighted" as const : "published" as const;
+      const status =
+        randomNumber < 5 ? ("highlighted" as const) : ("published" as const);
       const id = uuidv4();
-      
+
       const slug = await developerProfilesSeedingService.generateUniqueSlug(
         identity.name
       );
-      
+
       const developerProfile: AddDeveloperProfile = {
         id: id,
         identityId: identity.id,
-        slug: slug, 
+        slug: slug,
         name: identity.name,
         email: identity.email,
         avatarUrl: faker.image.avatar(),
         status,
       };
-      
+
       const background: developerProfileDetails = {
         id: id,
         languages: faker.helpers.arrayElements(
           [
-            "English", "Swedish", "Spanish", "French", "German", "Italian", "Russian",
-            "Chinese", "Japanese", "Korean", "Arabic", "Persian", "Turkish", "Hindi",
-            "Urdu", "Bengali", "Punjabi", "Telugu", "Marathi", "Tamil", "Gujarati",
-            "Kannada", "Odia", "Malayalam",
+            "English",
+            "Swedish",
+            "Spanish",
+            "French",
+            "German",
+            "Italian",
+            "Russian",
+            "Chinese",
+            "Japanese",
+            "Korean",
+            "Arabic",
+            "Persian",
+            "Turkish",
+            "Hindi",
+            "Urdu",
+            "Bengali",
+            "Punjabi",
+            "Telugu",
+            "Marathi",
+            "Tamil",
+            "Gujarati",
+            "Kannada",
+            "Odia",
+            "Malayalam",
           ],
           { min: 1, max: 6 }
         ),
         educations: faker.helpers.arrayElements(
           [
-            "B.Sc. in Computer Science", "M.Sc. in Artificial Intelligence",
-            "Ph.D. in Software Engineering", "Diploma in Data Science",
-            "Certificate in UX Design", "Bootcamp in Web Development",
-            "Online course in Machine Learning", "Self-taught Programmer",
-            "High School Diploma", "GED", "Vocational School",
-            "Associate Degree", "Bachelor's Degree",
+            "B.Sc. in Computer Science",
+            "M.Sc. in Artificial Intelligence",
+            "Ph.D. in Software Engineering",
+            "Diploma in Data Science",
+            "Certificate in UX Design",
+            "Bootcamp in Web Development",
+            "Online course in Machine Learning",
+            "Self-taught Programmer",
+            "High School Diploma",
+            "GED",
+            "Vocational School",
+            "Associate Degree",
+            "Bachelor's Degree",
           ],
           { min: 0, max: 4 }
         ),
@@ -57,7 +98,10 @@ export async function seedDeveloperProfiles(identities: IdentitySelect[]) {
           .arrayElements(
             [
               { url: "https://github.com/alimohseni99", name: "Github" },
-              { url: "https://www.linkedin.com/in/ali-mohseni-se", name: "LinkedIn" },
+              {
+                url: "https://www.linkedin.com/in/ali-mohseni-se",
+                name: "LinkedIn",
+              },
               { url: "https://www.alimohseni.se/", name: "Resume" },
             ],
             { min: 1, max: 3 }
@@ -66,17 +110,19 @@ export async function seedDeveloperProfiles(identities: IdentitySelect[]) {
       };
 
       console.log(background);
-      
-      await developerProfilesSeedingService.addDeveloperProfile(developerProfile);
-      
+
+      await developerProfilesSeedingService.addDeveloperProfile(
+        developerProfile
+      );
+
       developerIds.push(id);
-      
+
       console.log(`Added developer profile for ${identity.name} with ID ${id}`);
     }
-    
+
     await developerProfilesSeedingService.repopulateSearch();
     console.log(`Done seeding ${developerIds.length} developer profiles!`);
-    
+
     return developerIds;
   } catch (error) {
     console.error("Error seeding developer profiles:", error);
